@@ -22,6 +22,21 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
+    dataBinding {
+        //noinspection DataBindingWithoutKapt
+        enabled = true
+        enabledForTests = true
+    }
+
+    compileOptions {
+        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+    }
 }
 
 dependencies {
@@ -53,6 +68,8 @@ dependencies {
     implementation "androidx.cardview:cardview:1.0.0"
     implementation "androidx.work:work-runtime:2.4.0"
     implementation "androidx.security:security-crypto:1.1.0-alpha02"
+
+    implementation "androidx.lifecycle:lifecycle-viewmodel:2.2.0"
 
     // lifecycle
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.2.0"
