@@ -1,5 +1,6 @@
 package com.doinglab.wonjong
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -16,25 +17,36 @@ class MainViewModel : ViewModel() {
     val file: LiveData<String> = _file
 
     fun onButtonClick(type: ButtonClickType) {
-        when (type) {
-            ButtonClickType.PLUS -> {
-                val afterCount = getPlusCount(count.value)
-                _count.postValue(afterCount)
-                _file.postValue(plusFile(_file.value)(afterCount))
+        runCatching { // cmd + B를 통해 runCatching의 Result를 확인해보면 모나드의 result 패턴을 사용하는 것을 확인할 수 있다.
+            when (type) {
+                ButtonClickType.PLUS -> {
+                    val afterCount = getPlusCount(count.value)
+                    _file.value = plusFile(_file.value)(afterCount)
+                    afterCount
+                }
+                ButtonClickType.MINUS -> {
+                    _file.value = minusFile(_file.value, minusFunc)
+                    minusCount(count.value)
+                }
+                ButtonClickType.CLEAR -> {
+                    0
+                }
             }
-            ButtonClickType.MINUS -> {
-                minusCount(count.value)
-                _file.postValue(minusFile(_file.value, minusFunc))
+        }.mapCatching {
+            if (file.value.isNullOrEmpty() && type != ButtonClickType.CLEAR) {
+                throw Error("file is empty")
             }
-            ButtonClickType.CLEAR -> {
-                _count.postValue(0)
-            }
+            it
+        }.onSuccess {
+            _count.postValue(it)
+        }.onFailure {
+            Log.e(MainViewModel::class.java.simpleName, it.toString())
         }
     }
 
     // 순수함수
     private fun getPlusCount(number: Int?): Int? {
-        return number?.plus(1)
+        return number?.plus(1) // plus를 하였지만 number는 변하지 않는다. Immutable
     }
 
     // 순수함수X
@@ -53,7 +65,7 @@ class MainViewModel : ViewModel() {
     // 함수 자체를 변수로 가질 수 있음
     private val minusFunc: (String?) -> String? = {
         if (it.isNullOrEmpty()) {
-            null
+            ""
         } else {
             it.substring(0, it.length - 1)
         }
